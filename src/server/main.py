@@ -13,7 +13,7 @@ def listenToClients(addr:str,logPackets:bool):
         global latestPacket
         latestPacket = connectionDic[addr][0].recv(5000)
         if logPackets:
-                print(f"{addr}:{latestPacket}")
+                print(f"{addr}:{latestPacket.decode()}")
 
 class server():
     def __init__(self):
@@ -36,14 +36,12 @@ class server():
 
             try:
                 possibleCodeName = possibleCodeName.split(":")
-                print(possibleCodeName)
                 possibleCodeName[1] == possibleCodeName[1] 
             except Exception as e:
                 connection.send(f"{e}".encode())
                 connection.close()
             if possibleCodeName[1] == "codename":
                 connectionDic[str(possibleCodeName[0])] = [connection,address[0]]
-                print(connectionDic[str(possibleCodeName[0])],type(connectionDic[str(possibleCodeName[0])]))
                 listenThread = threading.Thread(target=listenToClients,args=[possibleCodeName[0],True])
                 listenThread.start()
             else:
