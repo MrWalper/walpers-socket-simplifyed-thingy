@@ -43,12 +43,13 @@ class client():
                 print("Connection aborted!")
                 quit()
 
-clientVar = client(username="Walper",host="localhost",port=5000,logPacket=True)
-listenThread = threading.Thread(target=clientVar.listenToServer)
-listenThread.start()
+if __name__ == "__main__":
+    clientVar = client(username="Walper",host="localhost",port=5000,logPacket=True)
+    listenThread = threading.Thread(target=clientVar.listenToServer)
+    listenThread.start()
 
-while True:
-    #listenThread.start()
-    data = input("> ")
-    clientVar.sendPacket(message=data)
+    while True:
+        #listenThread.start()
+        data = input("\n> ")
+        clientVar.sendPacket(message=data)
     
