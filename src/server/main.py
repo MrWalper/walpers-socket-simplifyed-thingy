@@ -1,69 +1,56 @@
 import socket
+import threading
+import json
 
-def server_program():
-    # get the hostname
-    host = "localhost"
-    port = 5000  # initiate port no above 1024
-
-    server_socket = socket.socket()  # get instance
-    # look closely. The bind() function takes tuple as argument
-    server_socket.bind((host, port))  # bind host address and port together
-
-    # configure how many client the server can listen simultaneously
-    server_socket.listen(2)
-    conn, address = server_socket.accept()  # accept new connection
-    print("Connection from: " + str(address))
+def getJson(path:str):
+    with open(path,"r") as file:
+        data = json.load(file)
+        return data
+    
+def listenToClients(addr:str,logPackets:bool):
+    connectionDic[addr][0].send(b"Your listening thread made successfully")
     while True:
-        # receive data stream. it won't accept data packet greater than 1024 bytes
-        data = conn.recv(1024).decode()
-        if not data:
-            # if data is not received break
-            break
-        print("from connected user: " + str(data))
-        data = input(' -> ')
-        conn.send(data.encode())  # send data to the client
-
-    conn.close()  # close the connection
+        global latestPacket
+        latestPacket = connectionDic[addr][0].recv(5000)
+        if logPackets:
+                print(f"{addr}:{latestPacket}")
 
 class server():
-    def __init__(self,maxNum:int, host:str, port:int):
-        self.maxNum = maxNum
-        self.host = host
-        self.port = port
+    def __init__(self):
+        self.config = getJson("config.json")
 
-        self.serverSocket = socket.socket()
-        self.serverSocket.bind((self.host,self.port))
-        self.serverSocket.listen(maxNum)
-        self.connection, self.clientAddress = self.serverSocket.accept()
-        self.connSet = set()
-        self.connList = []
+        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.serverSocket.bind((self.config["ip"],self.config["port"]))
+        self.serverSocket.listen(self.config["maxConnections"])
+
+        global connectionDic 
+        connectionDic = {}
     
-    def listenForConnections(self):
-        self.conn, self.addr = self.serverSocket.accept()
-        if self.conn in self.connSet and self.addr in self.connSet:
-            self.connList.append({
-                "connection":self.conn,
-                "addr":self.addr
-            })
-    
-    def listenToClient(self, logPackets:bool):
-        self.data = self.connection.recv(self.port)
-        if logPackets:
-            print(self.data)
-        return self.data
+    def acceptConenctions(self):
+        while True:
+            connection, address = self.serverSocket.accept()
 
-    def sendToClient(self, message:str,connNum:int):
-        self.connList[connNum]["connection"].send(message.encode())
+            possibleCodeName = connection.recv(5000)
+            possibleCodeName = possibleCodeName.decode()
+            print(f"Connection made! IP:{address} Codename {possibleCodeName}")
 
+            try:
+                possibleCodeName = possibleCodeName.split(":")
+                print(possibleCodeName)
+                possibleCodeName[1] == possibleCodeName[1] 
+            except Exception as e:
+                connection.send(f"{e}".encode())
+                connection.close()
+            if possibleCodeName[1] == "codename":
+                connectionDic[str(possibleCodeName[0])] = [connection,address[0]]
+                print(connectionDic[str(possibleCodeName[0])],type(connectionDic[str(possibleCodeName[0])]))
+                listenThread = threading.Thread(target=listenToClients,args=[possibleCodeName[0],True])
+                listenThread.start()
+            else:
+                connection.send("Send segistration packet (YOURCODENAME:codename)".encode())
+                connection.close()
 
-#if __name__ == '__main__':
-    #server_program()
-
-server = server(maxNum=2,host="localhost",port=5000)
-
-while True:
-    server.listenForConnections()
-    data = server.listenToClient(True)
-    clientNum = input("Num> ")
-    msg = input("> ")
-    server.sendToClient(message=msg,connNum=clientNum)
+if __name__ == "__main__":
+    serverVar = server()
+    acceptThread = threading.Thread(target=serverVar.acceptConenctions)
+    acceptThread.start()
