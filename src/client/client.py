@@ -8,12 +8,12 @@ class client():
         self.port = port
         self.logPacket = logPacket
 
-        self.testMessage = "Walper"
         self.clientSocket = socket.socket()
         self.latestPacket = ""
 
         try:
             self.clientSocket.connect((self.host,self.port))
+            self.clientSocket.send(f"{self.username}:codename".encode())
         except ConnectionRefusedError:
             print("Couldn't connect to server.")
     

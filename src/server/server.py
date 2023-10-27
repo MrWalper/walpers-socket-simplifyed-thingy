@@ -12,12 +12,15 @@ def listenToClients(addr:str,logPackets:bool):
     while True:
         global latestPacket
         latestPacket = connectionDic[addr][0].recv(5000)
+        latestPacket = f"{latestPacket}:{addr}".decode()
         if logPackets:
                 print(f"{addr}:{latestPacket.decode()}")
 
-class server():
-    def __init__(self):
-        self.config = getJson("config.json")
+class server:
+    def __init__(self, configPath):
+        self.configPath = configPath
+
+        self.config = getJson(configPath)
 
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serverSocket.bind((self.config["ip"],self.config["port"]))

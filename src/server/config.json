@@ -2,5 +2,5 @@
     "maxConnections":2,
     "port":5000,
     "ip":"localhost",
-    "logPackets":true 
+    "logPackets":true
 }
